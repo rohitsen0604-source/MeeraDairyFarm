@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="hi">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/jpeg" href="/image/logo.jpeg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Meera Dairy Farm & Agro Products | Pure Organic Dairy</title>
+    <meta name="description" content="Experience 100% Pure, Organic, and Fresh Dairy Products directly from Meera Dairy Farm & Agro Products." />
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Preloader Page (Clean Circular Logo with & AGRO PRODUCTS Subtitle) -->
+    <div id="preloader">
+      <div class="loader-content-wrapper">
+        <!-- Circular Logo with Rotating Green Spinner Ring -->
+        <div class="circular-logo-frame">
+          <svg class="spinner-ring-svg" viewBox="0 0 100 100">
+            <circle class="ring-track" cx="50" cy="50" r="46"></circle>
+            <circle id="ring-progress" class="ring-fill" cx="50" cy="50" r="46"></circle>
+          </svg>
+          <div class="circular-logo-inner">
+            <img src="/image/logo.jpeg" alt="Meera Dairy Farm Logo" class="logo-image-circle" />
+          </div>
+        </div>
+
+        <h1 class="farm-title">Meera Dairy Farm</h1>
+        <p class="farm-subtitle">& AGRO PRODUCTS</p>
+        
+        <div class="loader-bar-wrapper">
+          <div id="loader-bar" class="loader-bar-fill"></div>
+        </div>
+        
+        <div class="loader-status">
+          <span id="loader-text">Loading Freshness...</span>
+          <span id="loader-percent" class="loader-percent">0%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Promotional Ad Popup Modal (Full Poster Image Modal) -->
+    <div id="promo-modal-backdrop" class="promo-backdrop">
+      <div class="promo-modal-card-full">
+        <button id="close-promo-btn" class="promo-close-btn-full" title="Close">&times;</button>
+        <img src="/image/products-showcase.png" alt="Meera Dairy Farm Promo Poster" class="promo-full-poster-img" />
+      </div>
+    </div>
+
+    <!-- Floating Scroll To Top Button (Matching SS2) -->
+    <button id="scroll-top-btn" title="Scroll to Top">⬆️</button>
+
+    <!-- AI Generated Organic Farm Cinematic Background Motion Layer -->
+    <div id="hero-bg-motion-wrapper">
+      <div class="bg-slide slide-1 active"></div>
+      <div class="bg-slide slide-2"></div>
+      <div class="hero-bg-white-blur-overlay"></div>
+    </div>
+
+    <!-- Main WebGL & App UI Container -->
+    <div id="app">
+      <canvas id="webgl-canvas"></canvas>
+      <div id="ui-container">
+        <!-- Main Website Content Rendered via TypeScript -->
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
