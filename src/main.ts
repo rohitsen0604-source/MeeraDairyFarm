@@ -15,6 +15,7 @@ class DairyScene {
   private lastScrollY: number = 0;
   private isDarkTheme: boolean = false;
   private cartCount: number = 2;
+  private currentRoute: 'home' | 'about' = 'home';
 
   constructor() {
     this.canvas = document.querySelector('#webgl-canvas') as HTMLCanvasElement;
@@ -58,6 +59,22 @@ class DairyScene {
 
     // Start 3D Render Loop
     this.animate();
+
+    // Routing setup
+    if (window.location.hash.toLowerCase() === '#about') {
+      this.currentRoute = 'about';
+    }
+    window.addEventListener('hashchange', () => {
+      const hash = window.location.hash.toLowerCase();
+      if (hash === '#about') {
+        this.navigateTo('about');
+      } else if (hash.startsWith('#')) {
+        const target = hash.replace('#', '');
+        this.navigateTo('home', target);
+      } else {
+        this.navigateTo('home');
+      }
+    });
 
     // Start Bulletproof Preloader Counter
     this.initPreloader();
@@ -292,7 +309,7 @@ class DairyScene {
     ui.innerHTML = `
       <!-- Top Fixed White Frosted Glass Blur Navbar -->
       <header class="navbar-glass interactive">
-        <div style="display: flex; align-items: center; gap: 0.9rem;">
+        <div id="nav-brand-logo" style="display: flex; align-items: center; gap: 0.9rem; cursor: pointer;">
           <img src="/image/logo.jpeg" alt="Logo" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid #65a30d; box-shadow: 0 4px 12px rgba(101, 163, 13, 0.3);" />
           <div>
             <h2 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: var(--color-text-title); margin: 0; line-height: 1.1;">
@@ -305,12 +322,12 @@ class DairyScene {
         </div>
 
         <ul class="nav-links">
-          <li><a href="#home" class="nav-link-item active">Home</a></li>
-          <li><a href="#about" class="nav-link-item">About</a></li>
-          <li><a href="#products" class="nav-link-item">Products</a></li>
-          <li><a href="#our-farm" class="nav-link-item">Our Farm</a></li>
-          <li><a href="#gallery" class="nav-link-item">Gallery</a></li>
-          <li><a href="#contact" class="nav-link-item">Contact</a></li>
+          <li><a href="#home" id="nav-link-home" class="nav-link-item ${this.currentRoute === 'home' ? 'active' : ''}" data-nav="home">Home</a></li>
+          <li><a href="#about" id="nav-link-about" class="nav-link-item ${this.currentRoute === 'about' ? 'active' : ''}" data-nav="about">About</a></li>
+          <li><a href="#products" id="nav-link-products" class="nav-link-item" data-nav="products">Products</a></li>
+          <li><a href="#our-farm" id="nav-link-our-farm" class="nav-link-item" data-nav="our-farm">Our Farm</a></li>
+          <li><a href="#gallery" id="nav-link-gallery" class="nav-link-item" data-nav="gallery">Gallery</a></li>
+          <li><a href="#contact" id="nav-link-contact" class="nav-link-item" data-nav="contact">Contact</a></li>
         </ul>
 
         <div class="nav-actions">
@@ -369,6 +386,368 @@ class DairyScene {
         </div>
       </div>
 
+      <!-- Main Content View Container -->
+      <div id="main-content-view"></div>
+
+      <!-- Global Floating WhatsApp Button (Visible on Home & About) -->
+      <a href="https://wa.me/919752127710?text=Hello%20Meera%20Dairy%20Farm,%20I%20want%20to%20order%20pure%20milk%20and%20know%20more." target="_blank" class="floating-whatsapp-btn" title="Chat on WhatsApp">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24m4.52 11.53c-.25-.12-1.47-.72-1.7-.81-.23-.08-.39-.12-.56.12-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.47-1.39-1.72-.14-.25-.02-.38.11-.5.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.43s-.56-1.34-.76-1.84c-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.22.25-.86.84-.86 2.05s.88 2.38 1 2.54c.12.17 1.73 2.64 4.2 3.7.59.25 1.05.4 1.41.51.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.15-1.18-.06-.11-.23-.17-.48-.3z"/>
+        </svg>
+      </a>
+    `;
+
+    // Attach Event Listeners
+    document.getElementById('theme-toggle-btn')?.addEventListener('click', () => this.toggleTheme());
+    document.getElementById('cart-btn')?.addEventListener('click', () => this.toggleCartDrawer(true));
+    document.getElementById('close-cart-btn')?.addEventListener('click', () => this.toggleCartDrawer(false));
+    document.getElementById('cart-backdrop')?.addEventListener('click', () => this.toggleCartDrawer(false));
+    
+    // Promo Popup Event Listeners
+    document.getElementById('close-promo-btn')?.addEventListener('click', () => this.togglePromoModal(false));
+    document.getElementById('promo-modal-backdrop')?.addEventListener('click', (e) => {
+      if (e.target === document.getElementById('promo-modal-backdrop')) {
+        this.togglePromoModal(false);
+      }
+    });
+
+    // Scroll To Top Floating Button Action
+    document.getElementById('scroll-top-btn')?.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+
+    // Navbar Routing Event Listeners
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', (e) => {
+        const nav = link.getAttribute('data-nav');
+        if (nav === 'about') {
+          e.preventDefault();
+          window.location.hash = '#about';
+          this.navigateTo('about');
+        } else if (nav === 'home') {
+          e.preventDefault();
+          window.location.hash = '#home';
+          this.navigateTo('home');
+        } else if (nav) {
+          e.preventDefault();
+          window.location.hash = '#' + nav;
+          this.navigateTo('home', nav);
+        }
+      });
+    });
+
+    document.getElementById('nav-brand-logo')?.addEventListener('click', () => {
+      window.location.hash = '#home';
+      this.navigateTo('home');
+    });
+
+    // Render Initial View
+    this.navigateTo(this.currentRoute);
+
+  }
+
+  private initTimelineProgressAnimation(): void {
+    const timelineSection = document.getElementById('timeline');
+    const fillLine = document.querySelector('.timeline-progress-line-fill') as HTMLElement;
+    const stepCircles = document.querySelectorAll('.timeline-step-circle');
+
+    if (!timelineSection || !fillLine) return;
+
+    let hasStarted = false;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !hasStarted) {
+            hasStarted = true;
+            this.runTimelineProgress(fillLine, stepCircles);
+          }
+        });
+      },
+      { threshold: 0.2 }
+    );
+
+    observer.observe(timelineSection);
+  }
+
+  private runTimelineProgress(fillLine: HTMLElement, stepCircles: NodeListOf<Element>): void {
+    const duration = 9000; // 9 seconds slow motion progress bar fill
+    const startTime = performance.now();
+
+    const updateProgress = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      const fillPercent = progress * 100;
+      fillLine.style.width = `${fillPercent}%`;
+
+      const thresholds = [5, 25, 50, 75, 95];
+      stepCircles.forEach((circle, idx) => {
+        if (fillPercent >= thresholds[idx]) {
+          circle.classList.add('active');
+        } else {
+          circle.classList.remove('active');
+        }
+      });
+
+      if (progress < 1) {
+        requestAnimationFrame(updateProgress);
+      } else {
+        fillLine.style.width = '100%';
+        stepCircles.forEach((circle) => circle.classList.add('active'));
+
+        // Start slow continuous step highlight loop
+        this.startContinuousStepLoop(stepCircles);
+      }
+    };
+
+    requestAnimationFrame(updateProgress);
+  }
+
+  private startContinuousStepLoop(stepCircles: NodeListOf<Element>): void {
+    let currentActive = 0;
+    setInterval(() => {
+      stepCircles.forEach((circle, idx) => {
+        if (idx === currentActive) {
+          circle.classList.add('active');
+        } else {
+          circle.classList.remove('active');
+        }
+      });
+      currentActive = (currentActive + 1) % stepCircles.length;
+    }, 3200); // 3.2 seconds per step pulse loop
+  }
+
+  private initStatsCounter(): void {
+    const statsSection = document.getElementById('stats-counter');
+    if (!statsSection) return;
+
+    let hasAnimated = false;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !hasAnimated) {
+            hasAnimated = true;
+            this.animateCounters();
+            observer.disconnect();
+          }
+        });
+      },
+      { threshold: 0.25 }
+    );
+
+    observer.observe(statsSection);
+  }
+
+  private animateCounters(): void {
+    const statNumbers = document.querySelectorAll('.stat-number');
+    
+    statNumbers.forEach((el) => {
+      const target = parseInt(el.getAttribute('data-target') || '0', 10);
+      const suffix = el.getAttribute('data-suffix') || '';
+      const duration = 2000;
+      const startTime = performance.now();
+
+      const updateCount = (currentTime: number) => {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Easing function (easeOutCubic)
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const currentVal = Math.floor(easeOut * target);
+
+        el.textContent = `${currentVal}${suffix}`;
+
+        if (progress < 1) {
+          requestAnimationFrame(updateCount);
+        } else {
+          el.textContent = `${target}${suffix}`;
+        }
+      };
+
+      requestAnimationFrame(updateCount);
+    });
+  }
+
+  private initAutomatedFarmTour(): void {
+    const cards = document.querySelectorAll('.farm-day-card');
+    const hotspot = document.getElementById('farm-hotspot');
+    const tooltip = document.getElementById('hotspot-tooltip');
+    const liveTimeText = document.getElementById('farm-live-time-text');
+    const skyOverlay = document.getElementById('farm-sky-overlay');
+    const animatedSun = document.getElementById('farm-animated-sun');
+
+    if (!cards.length || !hotspot || !tooltip || !liveTimeText) return;
+
+    const stepData = [
+      { time: '4:00 AM', title: 'Dawn at the Farm', icon: '🌅', left: '22%', top: '48%', sunOpacity: 0.4, skyFilter: 'rgba(255, 140, 0, 0.22)' },
+      { time: '5:00 AM', title: 'Morning Milking', icon: '🐄', left: '40%', top: '45%', sunOpacity: 0.65, skyFilter: 'rgba(251, 191, 36, 0.18)' },
+      { time: '6:00 AM', title: 'Quality Testing', icon: '🧪', left: '55%', top: '50%', sunOpacity: 0.8, skyFilter: 'rgba(234, 179, 8, 0.14)' },
+      { time: '7:00 AM', title: 'Fresh Packaging', icon: '🥛', left: '68%', top: '55%', sunOpacity: 0.9, skyFilter: 'rgba(16, 185, 129, 0.1)' },
+      { time: '8:00 AM', title: 'Agro Processing', icon: '🌾', left: '78%', top: '60%', sunOpacity: 0.95, skyFilter: 'rgba(101, 163, 13, 0.08)' },
+      { time: '9:00 AM', title: 'Doorstep Delivery', icon: '🚚', left: '85%', top: '68%', sunOpacity: 1.0, skyFilter: 'rgba(0, 0, 0, 0)' }
+    ];
+
+    let currentStep = 0;
+    let timerId: any = null;
+    const intervalDuration = 4000; // 4 seconds per step auto progression
+
+    const setActiveStep = (stepIdx: number) => {
+      currentStep = stepIdx;
+      const data = stepData[stepIdx];
+
+      // Update cards
+      cards.forEach((card, idx) => {
+        if (idx === stepIdx) {
+          card.classList.add('active');
+          const fill = card.querySelector('.progress-fill') as HTMLElement;
+          if (fill) {
+            fill.style.transition = 'none';
+            fill.style.width = '0%';
+            setTimeout(() => {
+              fill.style.transition = `width ${intervalDuration}ms linear`;
+              fill.style.width = '100%';
+            }, 50);
+          }
+        } else {
+          card.classList.remove('active');
+          const fill = card.querySelector('.progress-fill') as HTMLElement;
+          if (fill) {
+            fill.style.transition = 'none';
+            fill.style.width = '0%';
+          }
+        }
+      });
+
+      // Update Hotspot Pointer position & tooltip
+      hotspot.style.left = data.left;
+      hotspot.style.top = data.top;
+      tooltip.innerHTML = `${data.icon} ${data.time} · ${data.title}`;
+
+      // Update Live Header Tag
+      liveTimeText.textContent = `LIVE: ${data.time} · ${data.title}`;
+
+      // Update Sky & Sun Overlays
+      if (skyOverlay) {
+        skyOverlay.style.background = data.skyFilter;
+      }
+      if (animatedSun) {
+        animatedSun.style.opacity = `${data.sunOpacity}`;
+      }
+    };
+
+    const startAutoLoop = () => {
+      stopAutoLoop();
+      setActiveStep(currentStep);
+      timerId = setInterval(() => {
+        currentStep = (currentStep + 1) % stepData.length;
+        setActiveStep(currentStep);
+      }, intervalDuration);
+    };
+
+    const stopAutoLoop = () => {
+      if (timerId) clearInterval(timerId);
+    };
+
+    // User Click Interaction on cards
+    cards.forEach((card) => {
+      card.addEventListener('click', () => {
+        const stepIdx = parseInt(card.getAttribute('data-step') || '0', 10);
+        currentStep = stepIdx;
+        startAutoLoop(); // Jump to selected step and restart auto loop
+      });
+    });
+
+    // Start auto loop when section scrolls into view
+    const section = document.getElementById('experience-farm');
+    if (section) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            startAutoLoop();
+          }
+        });
+      }, { threshold: 0.15 });
+      observer.observe(section);
+    } else {
+      startAutoLoop();
+    }
+  }
+
+  private navigateTo(route: 'home' | 'about', scrollTarget?: string): void {
+    this.currentRoute = route;
+    const mainView = document.getElementById('main-content-view');
+    const heroBgMotion = document.getElementById('hero-bg-motion-wrapper');
+    const homeLink = document.getElementById('nav-link-home');
+    const aboutLink = document.getElementById('nav-link-about');
+
+    if (route === 'about') {
+      if (homeLink) homeLink.classList.remove('active');
+      if (aboutLink) aboutLink.classList.add('active');
+      if (this.canvas) this.canvas.style.opacity = '0';
+      if (heroBgMotion) heroBgMotion.style.display = 'none';
+
+      if (mainView) {
+        mainView.innerHTML = this.renderAboutPageHTML();
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Ensure background video plays immediately
+      const aboutVid = document.querySelector('.about-bg-video-element') as HTMLVideoElement;
+      if (aboutVid) {
+        aboutVid.muted = true;
+        aboutVid.play().catch(() => {});
+      }
+
+      // Attach about footer nav links
+      document.querySelectorAll('.about-nav-link').forEach((link) => {
+        link.addEventListener('click', (e) => {
+          const target = link.getAttribute('data-target');
+          if (target === 'about') {
+            e.preventDefault();
+            this.navigateTo('about');
+          } else if (target === 'home') {
+            e.preventDefault();
+            this.navigateTo('home');
+          } else if (target) {
+            e.preventDefault();
+            this.navigateTo('home', target);
+          }
+        });
+      });
+    } else {
+      if (homeLink) homeLink.classList.add('active');
+      if (aboutLink) aboutLink.classList.remove('active');
+      if (this.canvas) this.canvas.style.opacity = '1';
+      if (heroBgMotion) heroBgMotion.style.display = 'block';
+
+      if (mainView) {
+        mainView.innerHTML = this.renderHomePageHTML();
+      }
+
+      // Re-init Home animations
+      this.initStatsCounter();
+      this.initTimelineProgressAnimation();
+      this.initAutomatedFarmTour();
+
+      if (scrollTarget && scrollTarget !== 'home') {
+        setTimeout(() => {
+          const targetEl = document.getElementById(scrollTarget);
+          if (targetEl) {
+            targetEl.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 100);
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+  }
+
+  private renderHomePageHTML(): string {
+    return `
       <!-- Hero Section -->
       <main class="hero-grid interactive" id="home">
         <div class="glass-panel" style="padding: 2.8rem; border-radius: 28px;">
@@ -1277,259 +1656,212 @@ class DairyScene {
         </div>
       </footer>
     `;
-
-    // Attach Event Listeners
-    document.getElementById('theme-toggle-btn')?.addEventListener('click', () => this.toggleTheme());
-    document.getElementById('cart-btn')?.addEventListener('click', () => this.toggleCartDrawer(true));
-    document.getElementById('close-cart-btn')?.addEventListener('click', () => this.toggleCartDrawer(false));
-    document.getElementById('cart-backdrop')?.addEventListener('click', () => this.toggleCartDrawer(false));
-    
-    // Promo Popup Event Listeners
-    document.getElementById('close-promo-btn')?.addEventListener('click', () => this.togglePromoModal(false));
-    document.getElementById('promo-modal-backdrop')?.addEventListener('click', (e) => {
-      if (e.target === document.getElementById('promo-modal-backdrop')) {
-        this.togglePromoModal(false);
-      }
-    });
-
-    // Scroll To Top Floating Button Action
-    document.getElementById('scroll-top-btn')?.addEventListener('click', () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-
-    // Initialize Animations
-    this.initStatsCounter();
-    this.initTimelineProgressAnimation();
-    this.initAutomatedFarmTour();
   }
 
-  private initTimelineProgressAnimation(): void {
-    const timelineSection = document.getElementById('timeline');
-    const fillLine = document.querySelector('.timeline-progress-line-fill') as HTMLElement;
-    const stepCircles = document.querySelectorAll('.timeline-step-circle');
+  private renderAboutPageHTML(): string {
 
-    if (!timelineSection || !fillLine) return;
+    return `
+      <div class="about-page-view">
+        <!-- Cinematic Background Video Layer with White Blur -->
+        <div class="about-bg-video-wrapper">
+          <video 
+            src="/vedios/10041402-hd_1080_1920_24fps.mp4" 
+            autoplay 
+            loop 
+            muted 
+            playsinline 
+            class="about-bg-video-element"
+          ></video>
+          <div class="about-bg-glass-overlay"></div>
+        </div>
 
-    let hasStarted = false;
+        <div class="about-content-wrapper">
+          <!-- About Hero Heading (Screenshot 1) -->
+          <div class="about-hero-header">
+            <h1 class="about-hero-title">About Meera Dairy Farm</h1>
+            <p class="about-hero-subtitle">A vision, one cow named Meera, and a journey of faith</p>
+          </div>
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && !hasStarted) {
-            hasStarted = true;
-            this.runTimelineProgress(fillLine, stepCircles);
-          }
-        });
-      },
-      { threshold: 0.2 }
-    );
+          <!-- MEERA'S CORNER CARD (Screenshot 1) -->
+          <div class="meeras-corner-card">
+            <div class="meera-cow-col">
+              <div class="meera-cow-frame">
+                <img src="/image/meera_cow.jpg" alt="Meera - Our First Cow" class="meera-cow-img" />
+              </div>
+              <h2 class="meera-cow-name">Meera</h2>
+              <p class="meera-cow-sublabel">SINCE 2016 · STILL WITH US</p>
+            </div>
 
-    observer.observe(timelineSection);
-  }
+            <div class="meera-text-col">
+              <div class="meeras-corner-badge">MEERA'S CORNER</div>
+              <blockquote class="meera-quote">
+                "She is not just a cow. She is the reason this farm exists, the reason your milk is pure, and the reason we wake up every morning with gratitude."
+              </blockquote>
+              <p class="meera-story-text">
+                In 2016, when we had nothing, we brought Meera home. She gave us more than milk — she gave us direction, hope, and a name. Today, she grazes freely in our farm, loved, healthy, and cherished as the eldest member of our family. Every product you receive carries a little of her spirit in it.
+              </p>
+            </div>
+          </div>
 
-  private runTimelineProgress(fillLine: HTMLElement, stepCircles: NodeListOf<Element>): void {
-    const duration = 9000; // 9 seconds slow motion progress bar fill
-    const startTime = performance.now();
+          <!-- WHERE IT ALL BEGAN SECTION (Screenshot 1 Exact Replica) -->
+          <div class="where-began-section">
+            <div class="began-story-col">
+              <h2 class="began-section-title">Where It All Began</h2>
+              
+              <p class="began-story-p">
+                It was 2016. We had no savings to fall back on, no one to guarantee the future — only a quiet, burning belief that if we worked with honesty and love, something good would grow. So we took the risk that changed our lives. We brought home one cow. We named her <strong class="green-highlight">Meera</strong>.
+              </p>
 
-    const updateProgress = (currentTime: number) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      
-      const fillPercent = progress * 100;
-      fillLine.style.width = `${fillPercent}%`;
+              <p class="began-story-p">
+                She is more than livestock to us. Those early mornings — the cold air, the uncertainty, the silent prayers — Meera stood through all of it with us. She is our first employee, our first blessing, and our first lesson in what it means to truly care for something.
+              </p>
 
-      const thresholds = [5, 25, 50, 75, 95];
-      stepCircles.forEach((circle, idx) => {
-        if (fillPercent >= thresholds[idx]) {
-          circle.classList.add('active');
-        } else {
-          circle.classList.remove('active');
-        }
-      });
+              <p class="began-story-p">
+                Slowly, through sheer faith and honest work, Meera's blessings multiplied. One cow became five. Five became twenty. And today, our family stands at <strong class="green-highlight">50+ cows and growing</strong> — each with a name, each nurtured with the same love we gave Meera on that very first day.
+              </p>
 
-      if (progress < 1) {
-        requestAnimationFrame(updateProgress);
-      } else {
-        fillLine.style.width = '100%';
-        stepCircles.forEach((circle) => circle.classList.add('active'));
+              <p class="began-story-p">
+                From a single dream in Village Mirjapur, near Yashwant Sagar Dam Hatod, Indore, Madhya Pradesh — we now serve 1,000+ families every day. Not because we chased scale, but because we never compromised on purity. This story is still being written, one drop of milk at a time.
+              </p>
+            </div>
 
-        // Start slow continuous step highlight loop
-        this.startContinuousStepLoop(stepCircles);
-      }
-    };
+            <!-- 2x2 Stat Cards Grid (Screenshot 1 Exact Alignment) -->
+            <div class="began-stats-grid">
+              <div class="began-stat-card">
+                <div class="began-stat-icon">
+                  <svg width="34" height="34" viewBox="0 0 24 24" fill="#65a30d" stroke="#65a30d" stroke-width="0.5">
+                    <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+                    <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <div class="began-stat-value">100% Organic</div>
+                <p class="began-stat-label">Chemical-free farming</p>
+              </div>
 
-    requestAnimationFrame(updateProgress);
-  }
+              <div class="began-stat-card">
+                <div class="began-stat-icon">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="#65a30d">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  </svg>
+                </div>
+                <div class="began-stat-value">Happy Cows</div>
+                <p class="began-stat-label">50+ well-cared animals</p>
+              </div>
 
-  private startContinuousStepLoop(stepCircles: NodeListOf<Element>): void {
-    let currentActive = 0;
-    setInterval(() => {
-      stepCircles.forEach((circle, idx) => {
-        if (idx === currentActive) {
-          circle.classList.add('active');
-        } else {
-          circle.classList.remove('active');
-        }
-      });
-      currentActive = (currentActive + 1) % stepCircles.length;
-    }, 3200); // 3.2 seconds per step pulse loop
-  }
+              <div class="began-stat-card">
+                <div class="began-stat-icon">
+                  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#65a30d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="8" r="6"/>
+                    <path d="m15.4 12.5 1.6 8.5-5-3-5 3 1.6-8.5"/>
+                  </svg>
+                </div>
+                <div class="began-stat-value">10+ Years</div>
+                <p class="began-stat-label">Experience & trust</p>
+              </div>
 
-  private initStatsCounter(): void {
-    const statsSection = document.getElementById('stats-counter');
-    if (!statsSection) return;
+              <div class="began-stat-card">
+                <div class="began-stat-icon">
+                  <svg width="34" height="34" viewBox="0 0 24 24" fill="#65a30d">
+                    <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                  </svg>
+                </div>
+                <div class="began-stat-value">1000+ Families</div>
+                <p class="began-stat-label">Served daily</p>
+              </div>
+            </div>
+          </div>
+        </div>
 
-    let hasAnimated = false;
+        <!-- ABOUT PAGE FOOTER (Screenshot 3) -->
+        <footer class="about-page-footer">
+          <div class="about-footer-grid">
+            <div>
+              <div style="display: flex; align-items: center; gap: 0.85rem; cursor: pointer;" class="about-nav-link" data-target="home">
+                <img src="/image/logo.jpeg" alt="Meera Dairy Farm" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid #65a30d;" />
+                <div>
+                  <h3 class="footer-brand-title">Meera Dairy Farm</h3>
+                  <span class="footer-brand-sub">& AGRO PRODUCTS</span>
+                </div>
+              </div>
+              <p class="footer-hindi-motto">शुद्धता, प्रकृति और विश्वास साथ चलते हैं।</p>
+              <p class="footer-english-motto">Pure • Natural • Trusted since generations.</p>
+              <div class="footer-social-icons">
+                <a href="https://instagram.com" target="_blank" class="footer-social-btn" title="Instagram">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+                </a>
+                <a href="https://facebook.com" target="_blank" class="footer-social-btn" title="Facebook">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+                </a>
+                <a href="https://youtube.com" target="_blank" class="footer-social-btn" title="YouTube">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><polygon points="10 15 15 12 10 9 10 15"/></svg>
+                </a>
+                <a href="https://wa.me/919752127710" target="_blank" class="footer-social-btn" title="WhatsApp">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                </a>
+              </div>
+            </div>
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && !hasAnimated) {
-            hasAnimated = true;
-            this.animateCounters();
-            observer.disconnect();
-          }
-        });
-      },
-      { threshold: 0.25 }
-    );
+            <div class="about-footer-col">
+              <h4>Quick Links</h4>
+              <ul>
+                <li><a href="#home" class="about-nav-link" data-target="home">Home</a></li>
+                <li><a href="#about" class="about-nav-link" data-target="about">About Us</a></li>
+                <li><a href="#products" class="about-nav-link" data-target="products">Products</a></li>
+                <li><a href="#our-farm" class="about-nav-link" data-target="our-farm">Our Farm</a></li>
+                <li><a href="#gallery" class="about-nav-link" data-target="experience-farm">Gallery</a></li>
+                <li><a href="#contact" class="about-nav-link" data-target="contact">Contact</a></li>
+              </ul>
+            </div>
 
-    observer.observe(statsSection);
-  }
+            <div class="about-footer-col">
+              <h4>Our Products</h4>
+              <ul>
+                <li><a href="#products" class="about-nav-link" data-target="products">Shri Dugdham Cow Milk</a></li>
+                <li><a href="#products" class="about-nav-link" data-target="products">Paneer</a></li>
+                <li><a href="#products" class="about-nav-link" data-target="products">Buttermilk (Chaach)</a></li>
+                <li><a href="#products" class="about-nav-link" data-target="products">Ghritam Desi Ghee</a></li>
+                <li><a href="#products" class="about-nav-link" data-target="products">Vermishakti Fertilizer</a></li>
+                <li><a href="#products" class="about-nav-link" data-target="products">Cow Dung Cakes</a></li>
+              </ul>
+            </div>
 
-  private animateCounters(): void {
-    const statNumbers = document.querySelectorAll('.stat-number');
-    
-    statNumbers.forEach((el) => {
-      const target = parseInt(el.getAttribute('data-target') || '0', 10);
-      const suffix = el.getAttribute('data-suffix') || '';
-      const duration = 2000;
-      const startTime = performance.now();
+            <div class="about-footer-col">
+              <h4>Contact Us</h4>
+              <div class="footer-contact-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#65a30d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top: 3px;"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                <span>Village Mirjapur, Near Yashwant Sagar Dam Hatod, Indore, Madhya Pradesh</span>
+              </div>
+              <div class="footer-contact-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#65a30d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top: 3px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                <a href="tel:+919752127710">+91 97521 27710</a>
+              </div>
+              <div class="footer-contact-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#65a30d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top: 3px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                <a href="tel:+918103289628">+91 81032 89628</a>
+              </div>
+              <div class="footer-contact-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#65a30d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top: 3px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                <a href="tel:+919826297031">+91 98262 97031</a>
+              </div>
+              <div class="footer-contact-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#65a30d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top: 3px;"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                <a href="mailto:moo@meeradairyfarm.com">moo@meeradairyfarm.com</a>
+              </div>
+              <div class="footer-contact-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#65a30d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top: 3px;"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                <a href="mailto:hello@meeradairyfarm.com">hello@meeradairyfarm.com</a>
+              </div>
+            </div>
+          </div>
 
-      const updateCount = (currentTime: number) => {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        
-        // Easing function (easeOutCubic)
-        const easeOut = 1 - Math.pow(1 - progress, 3);
-        const currentVal = Math.floor(easeOut * target);
+          <div class="about-footer-bottom">
+            <span>© 2026 Meera Dairy Farm & Agro Products. All rights reserved.</span>
+            <span>Made with 🐄 and ❤️ in Madhya Pradesh</span>
+          </div>
+        </footer>
+      </div>
+    `;
 
-        el.textContent = `${currentVal}${suffix}`;
-
-        if (progress < 1) {
-          requestAnimationFrame(updateCount);
-        } else {
-          el.textContent = `${target}${suffix}`;
-        }
-      };
-
-      requestAnimationFrame(updateCount);
-    });
-  }
-
-  private initAutomatedFarmTour(): void {
-    const cards = document.querySelectorAll('.farm-day-card');
-    const hotspot = document.getElementById('farm-hotspot');
-    const tooltip = document.getElementById('hotspot-tooltip');
-    const liveTimeText = document.getElementById('farm-live-time-text');
-    const skyOverlay = document.getElementById('farm-sky-overlay');
-    const animatedSun = document.getElementById('farm-animated-sun');
-
-    if (!cards.length || !hotspot || !tooltip || !liveTimeText) return;
-
-    const stepData = [
-      { time: '4:00 AM', title: 'Dawn at the Farm', icon: '🌅', left: '22%', top: '48%', sunOpacity: 0.4, skyFilter: 'rgba(255, 140, 0, 0.22)' },
-      { time: '5:00 AM', title: 'Morning Milking', icon: '🐄', left: '40%', top: '45%', sunOpacity: 0.65, skyFilter: 'rgba(251, 191, 36, 0.18)' },
-      { time: '6:00 AM', title: 'Quality Testing', icon: '🧪', left: '55%', top: '50%', sunOpacity: 0.8, skyFilter: 'rgba(234, 179, 8, 0.14)' },
-      { time: '7:00 AM', title: 'Fresh Packaging', icon: '🥛', left: '68%', top: '55%', sunOpacity: 0.9, skyFilter: 'rgba(16, 185, 129, 0.1)' },
-      { time: '8:00 AM', title: 'Agro Processing', icon: '🌾', left: '78%', top: '60%', sunOpacity: 0.95, skyFilter: 'rgba(101, 163, 13, 0.08)' },
-      { time: '9:00 AM', title: 'Doorstep Delivery', icon: '🚚', left: '85%', top: '68%', sunOpacity: 1.0, skyFilter: 'rgba(0, 0, 0, 0)' }
-    ];
-
-    let currentStep = 0;
-    let timerId: any = null;
-    const intervalDuration = 4000; // 4 seconds per step auto progression
-
-    const setActiveStep = (stepIdx: number) => {
-      currentStep = stepIdx;
-      const data = stepData[stepIdx];
-
-      // Update cards
-      cards.forEach((card, idx) => {
-        if (idx === stepIdx) {
-          card.classList.add('active');
-          const fill = card.querySelector('.progress-fill') as HTMLElement;
-          if (fill) {
-            fill.style.transition = 'none';
-            fill.style.width = '0%';
-            setTimeout(() => {
-              fill.style.transition = `width ${intervalDuration}ms linear`;
-              fill.style.width = '100%';
-            }, 50);
-          }
-        } else {
-          card.classList.remove('active');
-          const fill = card.querySelector('.progress-fill') as HTMLElement;
-          if (fill) {
-            fill.style.transition = 'none';
-            fill.style.width = '0%';
-          }
-        }
-      });
-
-      // Update Hotspot Pointer position & tooltip
-      hotspot.style.left = data.left;
-      hotspot.style.top = data.top;
-      tooltip.innerHTML = `${data.icon} ${data.time} · ${data.title}`;
-
-      // Update Live Header Tag
-      liveTimeText.textContent = `LIVE: ${data.time} · ${data.title}`;
-
-      // Update Sky & Sun Overlays
-      if (skyOverlay) {
-        skyOverlay.style.background = data.skyFilter;
-      }
-      if (animatedSun) {
-        animatedSun.style.opacity = `${data.sunOpacity}`;
-      }
-    };
-
-    const startAutoLoop = () => {
-      stopAutoLoop();
-      setActiveStep(currentStep);
-      timerId = setInterval(() => {
-        currentStep = (currentStep + 1) % stepData.length;
-        setActiveStep(currentStep);
-      }, intervalDuration);
-    };
-
-    const stopAutoLoop = () => {
-      if (timerId) clearInterval(timerId);
-    };
-
-    // User Click Interaction on cards
-    cards.forEach((card) => {
-      card.addEventListener('click', () => {
-        const stepIdx = parseInt(card.getAttribute('data-step') || '0', 10);
-        currentStep = stepIdx;
-        startAutoLoop(); // Jump to selected step and restart auto loop
-      });
-    });
-
-    // Start auto loop when section scrolls into view
-    const section = document.getElementById('experience-farm');
-    if (section) {
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            startAutoLoop();
-          }
-        });
-      }, { threshold: 0.15 });
-      observer.observe(section);
-    } else {
-      startAutoLoop();
-    }
   }
 }
 
